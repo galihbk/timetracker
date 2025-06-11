@@ -1,0 +1,13 @@
+# Global
+node_modules
+.env
+.DS_Store
+*.log
+
+# Frontend build (Next.js / React)
+frontend/.next
+frontend/dist
+frontend/out
+
+# Backend build
+backend/dist

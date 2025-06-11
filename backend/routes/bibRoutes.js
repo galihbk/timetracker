@@ -1,0 +1,142 @@
+const express = require("express");
+const pool = require("../db");
+
+module.exports = (io) => {
+  const router = express.Router();
+  router.post("/start", async (req, res) => {
+    const { waktu } = req.body;
+
+    if (!waktu) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Waktu tidak dikirim" });
+    }
+
+    try {
+      const pesertaRes = await pool.query("SELECT bib FROM peserta");
+      const peserta = pesertaRes.rows;
+
+      if (peserta.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Tidak ada peserta ditemukan." });
+      }
+
+      for (const row of peserta) {
+        const cek = await pool.query(
+          "SELECT id FROM timer WHERE bib = $1 AND lokasi = 'Start' LIMIT 1",
+          [row.bib]
+        );
+
+        if (cek.rows.length > 0) {
+          await pool.query(
+            "UPDATE timer SET waktu = $1 WHERE bib = $2 AND lokasi = 'Start'",
+            [waktu, row.bib]
+          );
+        } else {
+          await pool.query(
+            "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, 'Start', $2)",
+            [row.bib, waktu]
+          );
+        }
+      }
+
+      res.json({
+        success: true,
+        message:
+          "Waktu start berhasil diinput atau diperbarui untuk semua peserta.",
+      });
+    } catch (err) {
+      console.error("Gagal proses START:", err);
+      res.status(500).json({ success: false, message: "Gagal menyimpan data" });
+    }
+  });
+
+  router.post("/submit", async (req, res) => {
+    const { bib, lokasi } = req.body;
+    try {
+      const result = await pool.query(
+        "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, $2, NOW()) RETURNING *",
+        [bib, lokasi]
+      );
+      io.emit("new_bib", result.rows[0]);
+      res.json(result.rows[0]);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.get("/leaderboard", async (req, res) => {
+    try {
+      const waktuRes = await pool.query(`
+        SELECT p.bib, p.kategori, p.nama, t.lokasi, t.waktu
+        FROM peserta p
+        LEFT JOIN timer t ON p.bib = t.bib
+        ORDER BY p.bib, t.waktu ASC
+      `);
+
+      const pesertaMap = {};
+      const lokasiKategoriMap = {}; // Lokasi per kategori: { "14K": Set, "21K": Set }
+
+      waktuRes.rows.forEach(({ bib, nama, kategori, lokasi, waktu }) => {
+        if (!bib || !lokasi || !kategori) return;
+
+        // Inisialisasi peserta
+        if (!pesertaMap[bib]) {
+          pesertaMap[bib] = {
+            bib,
+            nama,
+            kategori,
+            lokasi: {},
+          };
+        }
+
+        pesertaMap[bib].lokasi[lokasi] = waktu;
+
+        // Inisialisasi lokasi per kategori
+        const waktuKey = `${waktu}_${lokasi}`;
+        if (!lokasiKategoriMap[kategori])
+          lokasiKategoriMap[kategori] = new Set();
+        lokasiKategoriMap[kategori].add(waktuKey);
+      });
+
+      // Susun lokasi per kategori
+      const lokasiFinal = {};
+      for (const kategori in lokasiKategoriMap) {
+        const ordered = Array.from(lokasiKategoriMap[kategori])
+          .sort((a, b) => {
+            const waktuA = new Date(a.split("_")[0]);
+            const waktuB = new Date(b.split("_")[0]);
+            return waktuA - waktuB;
+          })
+          .map((item) => item.split("_")[1]);
+
+        lokasiFinal[kategori] = [...new Set(ordered)]; // hapus duplikat, urut terjaga
+      }
+
+      // Hitung total waktu setiap peserta berdasarkan lokasi kategori-nya
+      const data = Object.values(pesertaMap).map((peserta) => {
+        const lokasiUrut = lokasiFinal[peserta.kategori] || [];
+        const waktuArr = lokasiUrut
+          .map((loc) => new Date(peserta.lokasi[loc]))
+          .filter((d) => !isNaN(d));
+
+        let totalWaktu = null;
+        if (waktuArr.length >= 2) {
+          totalWaktu = waktuArr[waktuArr.length - 1] - waktuArr[0];
+        }
+
+        return {
+          ...peserta,
+          totalWaktu,
+        };
+      });
+
+      res.json({ lokasi: lokasiFinal, data });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  return router;
+};
