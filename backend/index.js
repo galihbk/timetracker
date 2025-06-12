@@ -16,6 +16,6 @@ app.use(express.json());
 app.use("/api/bib", bibRoutes);
 
 const PORT = 5000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });
