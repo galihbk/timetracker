@@ -5,14 +5,23 @@ const socketIo = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
+
 const io = socketIo(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: ["http://34.9.34.33:3000"], // Ganti dengan IP/domain frontend kamu
+    credentials: true
+  },
 });
 
-const bibRoutes = require("./routes/bibRoutes")(io);
+// ✅ Aktifkan CORS lebih awal
+app.use(cors({
+  origin: ["http://34.9.34.33:3000"],
+  credentials: true
+}));
 
-app.use(cors());
 app.use(express.json());
+
+const bibRoutes = require("./routes/bibRoutes")(io);
 app.use("/api/bib", bibRoutes);
 
 const PORT = 5000;
