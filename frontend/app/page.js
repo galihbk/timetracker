@@ -11,14 +11,14 @@ export default function LeaderboardPage() {
   useEffect(() => {
     fetchLeaderboard();
 
-    const socket = io("http://localhost:5000");
+    const socket = io("http://35.232.72.141:5000");
     socket.on("new_bib", () => fetchLeaderboard());
     return () => socket.disconnect();
   }, []);
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await axios.get("http://34.9.34.33:5000/api/bib/leaderboard");
+      const res = await axios.get("http://35.232.72.141:5000/api/bib/leaderboard");
       const { lokasi, data } = res.data;
 
       const ranked = data.map((item) => ({ ...item }));
