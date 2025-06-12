@@ -15,7 +15,7 @@ export default function InputBibPage() {
     if (!bib) return;
 
     try {
-      await axios.post("http://localhost:5000/api/bib/submit", {
+      await axios.post("http://34.9.34.33:5000/api/bib/submit", {
         lokasi,
         bib,
         waktu: new Date().toISOString(),
