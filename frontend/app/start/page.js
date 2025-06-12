@@ -24,7 +24,7 @@ export default function StartPage() {
     const waktu = new Date().toLocaleString("sv-SE").replace(" ", "T");
 
     try {
-      const res = await axios.post("http://35.232.72.141/api/bib/start", {
+      const res = await axios.post("http://35.232.72.141:5000/api/bib/start", {
         waktu,
       });
 
