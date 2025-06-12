@@ -8,14 +8,14 @@ const server = http.createServer(app);
 
 const io = socketIo(server, {
   cors: {
-    origin: ["http://34.9.34.33:3000"], // Ganti dengan IP/domain frontend kamu
+    origin: ["http://35.232.72.141:3000"], // Ganti dengan IP/domain frontend kamu
     credentials: true
   },
 });
 
 // ✅ Aktifkan CORS lebih awal
 app.use(cors({
-  origin: ["http://34.9.34.33:3000"],
+  origin: ["http://35.232.72.141:3000"],
   credentials: true
 }));
 
