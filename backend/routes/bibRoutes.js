@@ -48,7 +48,7 @@ module.exports = (io) => {
       });
     } catch (err) {
       console.error("Gagal proses START:", err);
-      res.status(500).json({ success: false, message: "Gagal menyimpan data" });
+      res.status(500).json({ success: false, message: "Gagal menyimpan data", errors:err });
     }
   });
 
