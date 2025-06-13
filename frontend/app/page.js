@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import "../styles/globals.css";
 
 export default function LeaderboardPage() {
-  const [activeTab, setActiveTab] = useState("14K");
+  const [activeTab, setActiveTab] = useState("7K");
   const [rawData, setRawData] = useState({ lokasi: [], data: [] });
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function LeaderboardPage() {
   return (
     <main className="leaderboard-container page-wrapper">
       <div className="tab-buttons">
-        {["14K", "21K"].map((tab) => (
+        {["7K", "14K", "21K"].map((tab) => (
           <button
             key={tab}
             className={activeTab === tab ? "tab active" : "tab"}
