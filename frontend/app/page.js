@@ -23,23 +23,31 @@ export default function LeaderboardPage() {
 
       const ranked = data.map((item) => ({ ...item }));
 
+      // Urutkan berdasarkan jumlah checkpoint & total waktu
       const sorted = ranked.sort((a, b) => {
         const aCP = Object.keys(a.lokasi || {}).length;
         const bCP = Object.keys(b.lokasi || {}).length;
 
-        // 1. Lebih banyak checkpoint lebih tinggi
         if (bCP !== aCP) return bCP - aCP;
 
-        // 2. Jika checkpoint sama, bandingkan waktu total
         if (a.totalWaktu == null) return 1;
         if (b.totalWaktu == null) return -1;
         return a.totalWaktu - b.totalWaktu;
       });
 
-      // Beri peringkat ke semua yang ikut
-      sorted.forEach((item, idx) => {
-        const i = ranked.findIndex((r) => r.bib === item.bib);
-        if (i !== -1) ranked[i].rank = idx + 1;
+      // Bagi peserta berdasarkan kategori, dan beri peringkat terpisah
+      const kategoriGroups = {};
+
+      sorted.forEach((item) => {
+        if (!kategoriGroups[item.kategori]) kategoriGroups[item.kategori] = [];
+        kategoriGroups[item.kategori].push(item);
+      });
+
+      Object.keys(kategoriGroups).forEach((kategori) => {
+        kategoriGroups[kategori].forEach((item, idx) => {
+          const i = ranked.findIndex((r) => r.bib === item.bib);
+          if (i !== -1) ranked[i].rank = idx + 1;
+        });
       });
 
       setRawData({ lokasi, data: ranked });
