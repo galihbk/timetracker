@@ -66,10 +66,10 @@ module.exports = (io) => {
     }
   });
 
-  router.get("/leaderboard", async (req, res) => {
+router.get("/leaderboard", async (req, res) => {
   try {
     const waktuRes = await pool.query(`
-      SELECT p.bib, p.kategori, p.nama, t.lokasi, t.waktu
+      SELECT p.bib, p.kategori, p.nama, p.gender, p.kelas, t.lokasi, t.waktu
       FROM peserta p
       LEFT JOIN timer t ON p.bib = t.bib
       ORDER BY p.bib, t.waktu ASC
@@ -78,7 +78,7 @@ module.exports = (io) => {
     const pesertaMap = {};
     const lokasiKategoriMap = {}; // { "14K": [Start, Km 1, Finish] }
 
-    waktuRes.rows.forEach(({ bib, nama, kategori, lokasi, waktu }) => {
+    waktuRes.rows.forEach(({ bib, nama, kategori, gender, kelas, lokasi, waktu }) => {
       if (!bib || !lokasi || !kategori) return;
 
       // Inisialisasi peserta
@@ -86,6 +86,8 @@ module.exports = (io) => {
         pesertaMap[bib] = {
           bib,
           nama,
+          gender,
+          kelas,
           kategori,
           lokasi: {},
         };
@@ -127,6 +129,7 @@ module.exports = (io) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
   return router;
 };
