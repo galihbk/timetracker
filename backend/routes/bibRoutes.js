@@ -1,56 +1,67 @@
 const express = require("express");
 const pool = require("../db");
+const { DateTime } = require("luxon");
 
 module.exports = (io) => {
   const router = express.Router();
   router.post("/start", async (req, res) => {
-    const { waktu } = req.body;
+  const { waktu } = req.body;
 
-    if (!waktu) {
+  if (!waktu) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Waktu tidak dikirim" });
+  }
+
+  try {
+    const pesertaRes = await pool.query("SELECT bib, kategori FROM peserta");
+    const peserta = pesertaRes.rows;
+
+    if (peserta.length === 0) {
       return res
-        .status(400)
-        .json({ success: false, message: "Waktu tidak dikirim" });
+        .status(404)
+        .json({ success: false, message: "Tidak ada peserta ditemukan." });
     }
 
-    try {
-      const pesertaRes = await pool.query("SELECT bib FROM peserta");
-      const peserta = pesertaRes.rows;
-
-      if (peserta.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Tidak ada peserta ditemukan." });
+    for (const row of peserta) {
+      let waktuStart = DateTime.fromISO(waktu); // dari frontend dalam format ISO
+      if (row.kategori === "14K") {
+        waktuStart = waktuStart.plus({ minutes: 30 });
+      } else if (row.kategori === "7K") {
+        waktuStart = waktuStart.plus({ minutes: 40 });
       }
+      const waktuFinal = waktuStart.toISO(); // convert kembali ke format ISO
 
-      for (const row of peserta) {
-        const cek = await pool.query(
-          "SELECT id FROM timer WHERE bib = $1 AND lokasi = 'Start' LIMIT 1",
-          [row.bib]
+      const cek = await pool.query(
+        "SELECT id FROM timer WHERE bib = $1 AND lokasi = 'Start' LIMIT 1",
+        [row.bib]
+      );
+
+      if (cek.rows.length > 0) {
+        await pool.query(
+          "UPDATE timer SET waktu = $1 WHERE bib = $2 AND lokasi = 'Start'",
+          [waktuFinal, row.bib]
         );
-
-        if (cek.rows.length > 0) {
-          await pool.query(
-            "UPDATE timer SET waktu = $1 WHERE bib = $2 AND lokasi = 'Start'",
-            [waktu, row.bib]
-          );
-        } else {
-          await pool.query(
-            "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, 'Start', $2)",
-            [row.bib, waktu]
-          );
-        }
+      } else {
+        await pool.query(
+          "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, 'Start', $2)",
+          [row.bib, waktuFinal]
+        );
       }
-
-      res.json({
-        success: true,
-        message:
-          "Waktu start berhasil diinput atau diperbarui untuk semua peserta.",
-      });
-    } catch (err) {
-      console.error("Gagal proses START:", err);
-      res.status(500).json({ success: false, message: "Gagal menyimpan data", errors:err });
     }
-  });
+
+    res.json({
+      success: true,
+      message:
+        "Waktu start berhasil diinput atau diperbarui untuk semua peserta.",
+    });
+  } catch (err) {
+    console.error("Gagal proses START:", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal menyimpan data", errors: err });
+  }
+});
 
   router.post("/submit", async (req, res) => {
     const { bib, lokasi, waktu } = req.body;
