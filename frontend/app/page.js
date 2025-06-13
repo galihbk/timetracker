@@ -127,6 +127,8 @@ export default function LeaderboardPage() {
               <th>Rank</th>
               <th>BIB</th>
               <th>Nama</th>
+              <th>Gender</th>
+              <th>Kelas</th>
               {(rawData.lokasi[activeTab] || []).map((loc) => (
                 <th key={loc}>{loc}</th>
               ))}
@@ -139,6 +141,8 @@ export default function LeaderboardPage() {
                 <td>{row.rank || "-"}</td>
                 <td>{row.bib}</td>
                 <td>{getFirstName(row.nama)}</td>
+                <td>{row.gender}</td>
+                <td>{row.kelas}</td>
                 {(rawData.lokasi[activeTab] || []).map((loc) => (
                   <td key={loc}>
                     {row.lokasi[loc]
