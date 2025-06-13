@@ -28,7 +28,7 @@ module.exports = (io) => {
       if (row.kategori === "14K") {
         waktuStart = waktuStart.plus({ minutes: 30 });
       } else if (row.kategori === "7K") {
-        waktuStart = waktuStart.plus({ minutes: 40 });
+        waktuStart = waktuStart.plus({ minutes: 45 });
       }
       const waktuFinal = waktuStart.toISO(); // convert kembali ke format ISO
 
