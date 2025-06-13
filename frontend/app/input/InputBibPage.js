@@ -39,7 +39,7 @@ export default function InputBibPage() {
             type="number"
             value={bib}
             onChange={(e) => setBib(e.target.value)}
-            placeholder="Masukkan BIB"
+            placeholder="Masukkan BIB Tanpa huruf didepan"
           />
         </div>
         <button type="submit" className="btn-submit">
