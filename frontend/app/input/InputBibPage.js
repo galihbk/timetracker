@@ -36,7 +36,7 @@ export default function InputBibPage() {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <input
-            type="text"
+            type="number"
             value={bib}
             onChange={(e) => setBib(e.target.value)}
             placeholder="Masukkan BIB"
