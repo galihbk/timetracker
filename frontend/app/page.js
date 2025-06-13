@@ -99,7 +99,7 @@ export default function LeaderboardPage() {
             }`}
           >
             <h2>{item.bib}</h2>
-            <p>{getFirstName(item.nama)}</p>
+            <p>{item.nama}</p>
             <div
               className={`reward ${
                 item.rank === 1 ? "gold" : item.rank === 2 ? "silver" : "bronze"
