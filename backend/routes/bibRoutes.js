@@ -76,7 +76,7 @@ module.exports = (io) => {
     `);
 
     const pesertaMap = {};
-    const lokasiKategoriMap = {}; // Lokasi per kategori: { "14K": Set, "21K": Set }
+    const lokasiKategoriMap = {}; // { "14K": [Start, Km 1, Finish] }
 
     waktuRes.rows.forEach(({ bib, nama, kategori, lokasi, waktu }) => {
       if (!bib || !lokasi || !kategori) return;
@@ -91,24 +91,20 @@ module.exports = (io) => {
         };
       }
 
-      // Simpan waktu ke lokasi
+      // Simpan waktu per lokasi
       pesertaMap[bib].lokasi[lokasi] = waktu;
 
-      // Simpan lokasi berdasarkan kategori (TIDAK berdasarkan waktu)
-      if (!lokasiKategoriMap[kategori]) {
-        lokasiKategoriMap[kategori] = new Set();
+      // Simpan urutan lokasi berdasarkan kemunculan
+      if (!lokasiKategoriMap[kategori]) lokasiKategoriMap[kategori] = [];
+
+      if (!lokasiKategoriMap[kategori].includes(lokasi)) {
+        lokasiKategoriMap[kategori].push(lokasi);
       }
-      lokasiKategoriMap[kategori].add(lokasi);
     });
 
-    // Urutkan lokasi berdasarkan abjad (atau kamu bisa atur manual)
-    const lokasiFinal = {};
-    for (const kategori in lokasiKategoriMap) {
-      const ordered = Array.from(lokasiKategoriMap[kategori]).sort();
-      lokasiFinal[kategori] = ordered;
-    }
+    const lokasiFinal = lokasiKategoriMap;
 
-    // Hitung total waktu per peserta (waktu finish - start)
+    // Hitung total waktu per peserta (Finish - Start)
     const data = Object.values(pesertaMap).map((peserta) => {
       const lokasiUrut = lokasiFinal[peserta.kategori] || [];
       const waktuArr = lokasiUrut
