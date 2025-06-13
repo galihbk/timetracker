@@ -15,7 +15,7 @@ export default function InputBibPage() {
     if (!bib) return;
 
     try {
-      await axios.post("http://35.232.72.141:5000/api/bib/submit", {
+      await axios.post("https://result.bibsport.id/api/bib/submit", {
         lokasi,
         bib,
         waktu: new Date().toLocaleString("sv-SE").replace(" ", "T"),
