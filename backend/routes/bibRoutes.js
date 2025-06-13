@@ -53,11 +53,11 @@ module.exports = (io) => {
   });
 
   router.post("/submit", async (req, res) => {
-    const { bib, lokasi } = req.body;
+    const { bib, lokasi, waktu } = req.body;
     try {
       const result = await pool.query(
-        "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, $2, NOW()) RETURNING *",
-        [bib, lokasi]
+        "INSERT INTO timer (bib, lokasi, waktu) VALUES ($1, $2, $3) RETURNING *",
+        [bib, lokasi, waktu]
       );
       io.emit("new_bib", result.rows[0]);
       res.json(result.rows[0]);
