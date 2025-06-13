@@ -18,7 +18,7 @@ export default function InputBibPage() {
       await axios.post("http://35.232.72.141:5000/api/bib/submit", {
         lokasi,
         bib,
-        waktu: new Date().toISOString(),
+        waktu: new Date().toLocaleString("sv-SE").replace(" ", "T"),
       });
 
       setMessage(`BIB ${bib} berhasil disimpan!`);
