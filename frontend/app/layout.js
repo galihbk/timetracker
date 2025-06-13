@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "BIBSPORT",
-  description: "Result ini di buat oleh tim BIBSPORT dari PT. GALIH JAVA PRODUCITON",
+  description: "Result ini di buat oleh tim BIBSPORT dari PT. GALIH JAVA PRODUCTION",
 };
 
 export default function RootLayout({ children }) {
