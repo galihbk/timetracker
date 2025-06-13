@@ -140,7 +140,7 @@ export default function LeaderboardPage() {
               <tr key={row.bib}>
                 <td>{row.rank || "-"}</td>
                 <td>{row.bib}</td>
-                <td>{getFirstName(row.nama)}</td>
+                <td>{row.nama}</td>
                 <td>{row.gender}</td>
                 <td>{row.kelas}</td>
                 {(rawData.lokasi[activeTab] || []).map((loc) => (
