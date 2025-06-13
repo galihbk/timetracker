@@ -67,76 +67,70 @@ module.exports = (io) => {
   });
 
   router.get("/leaderboard", async (req, res) => {
-    try {
-      const waktuRes = await pool.query(`
-        SELECT p.bib, p.kategori, p.nama, t.lokasi, t.waktu
-        FROM peserta p
-        LEFT JOIN timer t ON p.bib = t.bib
-        ORDER BY p.bib, t.waktu ASC
-      `);
+  try {
+    const waktuRes = await pool.query(`
+      SELECT p.bib, p.kategori, p.nama, t.lokasi, t.waktu
+      FROM peserta p
+      LEFT JOIN timer t ON p.bib = t.bib
+      ORDER BY p.bib, t.waktu ASC
+    `);
 
-      const pesertaMap = {};
-      const lokasiKategoriMap = {}; // Lokasi per kategori: { "14K": Set, "21K": Set }
+    const pesertaMap = {};
+    const lokasiKategoriMap = {}; // Lokasi per kategori: { "14K": Set, "21K": Set }
 
-      waktuRes.rows.forEach(({ bib, nama, kategori, lokasi, waktu }) => {
-        if (!bib || !lokasi || !kategori) return;
+    waktuRes.rows.forEach(({ bib, nama, kategori, lokasi, waktu }) => {
+      if (!bib || !lokasi || !kategori) return;
 
-        // Inisialisasi peserta
-        if (!pesertaMap[bib]) {
-          pesertaMap[bib] = {
-            bib,
-            nama,
-            kategori,
-            lokasi: {},
-          };
-        }
-
-        pesertaMap[bib].lokasi[lokasi] = waktu;
-
-        // Inisialisasi lokasi per kategori
-        const waktuKey = `${waktu}_${lokasi}`;
-        if (!lokasiKategoriMap[kategori])
-          lokasiKategoriMap[kategori] = new Set();
-        lokasiKategoriMap[kategori].add(waktuKey);
-      });
-
-      // Susun lokasi per kategori
-      const lokasiFinal = {};
-      for (const kategori in lokasiKategoriMap) {
-        const ordered = Array.from(lokasiKategoriMap[kategori])
-          .sort((a, b) => {
-            const waktuA = new Date(a.split("_")[0]);
-            const waktuB = new Date(b.split("_")[0]);
-            return waktuA - waktuB;
-          })
-          .map((item) => item.split("_")[1]);
-
-        lokasiFinal[kategori] = [...new Set(ordered)]; // hapus duplikat, urut terjaga
+      // Inisialisasi peserta
+      if (!pesertaMap[bib]) {
+        pesertaMap[bib] = {
+          bib,
+          nama,
+          kategori,
+          lokasi: {},
+        };
       }
 
-      // Hitung total waktu setiap peserta berdasarkan lokasi kategori-nya
-      const data = Object.values(pesertaMap).map((peserta) => {
-        const lokasiUrut = lokasiFinal[peserta.kategori] || [];
-        const waktuArr = lokasiUrut
-          .map((loc) => new Date(peserta.lokasi[loc]))
-          .filter((d) => !isNaN(d));
+      // Simpan waktu ke lokasi
+      pesertaMap[bib].lokasi[lokasi] = waktu;
 
-        let totalWaktu = null;
-        if (waktuArr.length >= 2) {
-          totalWaktu = waktuArr[waktuArr.length - 1] - waktuArr[0];
-        }
+      // Simpan lokasi berdasarkan kategori (TIDAK berdasarkan waktu)
+      if (!lokasiKategoriMap[kategori]) {
+        lokasiKategoriMap[kategori] = new Set();
+      }
+      lokasiKategoriMap[kategori].add(lokasi);
+    });
 
-        return {
-          ...peserta,
-          totalWaktu,
-        };
-      });
-
-      res.json({ lokasi: lokasiFinal, data });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+    // Urutkan lokasi berdasarkan abjad (atau kamu bisa atur manual)
+    const lokasiFinal = {};
+    for (const kategori in lokasiKategoriMap) {
+      const ordered = Array.from(lokasiKategoriMap[kategori]).sort();
+      lokasiFinal[kategori] = ordered;
     }
-  });
+
+    // Hitung total waktu per peserta (waktu finish - start)
+    const data = Object.values(pesertaMap).map((peserta) => {
+      const lokasiUrut = lokasiFinal[peserta.kategori] || [];
+      const waktuArr = lokasiUrut
+        .map((loc) => new Date(peserta.lokasi[loc]))
+        .filter((d) => !isNaN(d));
+
+      let totalWaktu = null;
+      if (waktuArr.length >= 2) {
+        totalWaktu = waktuArr[waktuArr.length - 1] - waktuArr[0];
+      }
+
+      return {
+        ...peserta,
+        totalWaktu,
+      };
+    });
+
+    res.json({ lokasi: lokasiFinal, data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
   return router;
 };
