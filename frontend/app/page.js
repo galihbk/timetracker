@@ -21,7 +21,11 @@ export default function LeaderboardPage() {
       const res = await axios.get("http://35.232.72.141:5000/api/bib/leaderboard");
       const { lokasi, data } = res.data;
 
-      const ranked = data.map((item) => ({ ...item }));
+      // Tambahkan awalan M atau F berdasarkan gender
+      const ranked = data.map((item) => ({
+        ...item,
+        bib: `${item.gender === "male" ? "M" : "F"}${item.bib}`,
+      }));
 
       // Urutkan berdasarkan jumlah checkpoint & total waktu
       const sorted = ranked.sort((a, b) => {
@@ -37,7 +41,6 @@ export default function LeaderboardPage() {
 
       // Bagi peserta berdasarkan kategori, dan beri peringkat terpisah
       const kategoriGroups = {};
-
       sorted.forEach((item) => {
         if (!kategoriGroups[item.kategori]) kategoriGroups[item.kategori] = [];
         kategoriGroups[item.kategori].push(item);
